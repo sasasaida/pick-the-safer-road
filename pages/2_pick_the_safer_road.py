@@ -46,6 +46,9 @@ def submit_guess():
     else:
         st.error("Incorrect ❌")
 
+    st.write(f"Road A risk: {st.session_state.road_a['accident_risk']:.2f}, Road B risk: {st.session_state.road_b['accident_risk']:.2f}")
+
+
 # --- session defaults ---
 st.session_state.setdefault("score", 0)
 if "road_a" not in st.session_state or "road_b" not in st.session_state:
