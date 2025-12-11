@@ -45,5 +45,8 @@ with col2:
 st.radio("Which road is safer?", ("Road A", "Road B"), key="user_choice")
 
 # Buttons use callbacks to mutate session_state without risk of accidental resampling
-st.button("Submit Guess", on_click=submit_guess)
-st.button("Next Round", on_click=new_round)
+col3, col4 = st.columns(2)
+with col3:
+    st.button("Submit Guess", on_click=submit_guess)
+with col4:
+    st.button("Next Round", on_click=new_round)
