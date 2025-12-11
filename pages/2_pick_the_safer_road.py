@@ -1,20 +1,45 @@
+import random
 import streamlit as st
 import pandas as pd
+from utils.ml_utils import load_model, predict_risk
+
+model = load_model()
 
 # Load dataset once (still runs each script run, but reading is cheap if small)
 df = pd.read_csv("data/train.csv")
 
 # --- helpers ---
+
+def generate_random_road():
+    """Generate a random road sample for the game."""
+    # For demo, pick numeric and categorical features randomly
+    road = {
+        "num_lanes": random.choice([1, 2, 3, 4]),
+        "curvature": random.randint(0, 15),
+        "speed_limit": random.choice([40, 60, 80, 100, 120]),
+        "num_reported_accidents": random.randint(0, 5),
+        "road_type": random.choice(["highway", "rural", "urban"]),
+        "lighting": random.choice(["daylight", "dim", "night"]),
+        "weather": random.choice(["clear", "foggy", "rainy"]),
+        "time_of_day": random.choice(["morning", "afternoon", "evening"]),
+    }
+    # Compute predicted risk using your ML model
+    road["accident_risk"] = predict_risk(
+        model,
+        road["num_lanes"], road["curvature"], road["speed_limit"], road["num_reported_accidents"],
+        road["road_type"], road["lighting"], road["weather"], road["time_of_day"]
+    )
+    return road
+
 def new_round():
-    roads = df.sample(n=2, random_state=None)
-    st.session_state.road_a = roads.iloc[0]
-    st.session_state.road_b = roads.iloc[1]
+    st.session_state.road_a = generate_random_road()
+    st.session_state.road_b = generate_random_road()
 
 def submit_guess():
     # compute safer using the roads currently stored
     road_a = st.session_state.road_a
     road_b = st.session_state.road_b
-    safer = "Road A" if road_a["speed_limit"] < road_b["speed_limit"] else "Road B"
+    safer = "Road A" if road_a["accident_risk"] < road_b["accident_risk"] else "Road B"
     if st.session_state.user_choice == safer:
         st.success("Correct! ✅")
         st.session_state.score += 1
@@ -37,9 +62,13 @@ col1, col2 = st.columns(2)
 with col1:
     st.header("Road A")
     st.text(f"Speed limit: {st.session_state.road_a['speed_limit']}")
+    st.text(f"Lanes: {st.session_state.road_a['num_lanes']}")
+    st.text(f"Curvature: {st.session_state.road_a['curvature']}")
 with col2:
     st.header("Road B")
     st.text(f"Speed limit: {st.session_state.road_b['speed_limit']}")
+    st.text(f"Lanes: {st.session_state.road_b['num_lanes']}")
+    st.text(f"Curvature: {st.session_state.road_b['curvature']}")
 
 # Radio is linked to st.session_state.user_choice so its value persists
 st.radio("Which road is safer?", ("Road A", "Road B"), key="user_choice")
